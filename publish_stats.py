@@ -53,8 +53,8 @@ class UnifiMqttPublisher:
             ])
             payload = {k: dev[k] for k in dev.keys() & fieldsToInclude}
             #print(payload)
-            res = self.mqttClient.publish('unifi/stats/ap' + str(i), payload=json.dumps(payload))
-            #print(res.is_published())
+            self.mqttClient.publish('unifi/stats/ap' + str(i), payload=json.dumps(payload))
+            self.mqttClient.publish('unifi/availability/ap' + str(i), payload=dev['state'])
             i = i + 1
 
     def publishControllerStats(self):
