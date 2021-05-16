@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
+from asyncio.tasks import sleep
 from unificontrol import UnifiClient
+import time
 import paho.mqtt.client as mqtt
 import json
 import os
@@ -16,6 +18,7 @@ MQTT_HOST = os.getenv('MQTT_HOST', 'hass.home')
 MQTT_USER = os.getenv('MQTT_USER')
 MQTT_PASS = os.getenv('MQTT_PASS')
 
+POLL_FREQUENCY = os.getenv('POLL_FREQUENCY', 30)
 
 class UnifiMqttPublisher:
     def __init__(self):
@@ -24,6 +27,13 @@ class UnifiMqttPublisher:
         self.mqttClient.connect(MQTT_HOST, 1883, 60)
 
         self.unifiClient = UnifiClient(host=UNIFI_HOST,username=UNIFI_USER,password=UNIFI_PASS,site=UNIFI_SITE,port=UNIFI_PORT)
+
+    def run(self):
+        while (True):
+            print('Publishing..')
+            self.publishControllerStats()
+            self.publishDeviceStats()
+            time.sleep(POLL_FREQUENCY)
 
     def publishDeviceStats(self):
         devs = self.unifiClient.list_devices()
@@ -72,5 +82,4 @@ class UnifiMqttPublisher:
         self.mqttClient.publish('unifi/stats/controller', payload=json.dumps(payload))
 
 mqttPublisher = UnifiMqttPublisher()
-mqttPublisher.publishDeviceStats()
-mqttPublisher.publishControllerStats()
+mqttPublisher.run()
