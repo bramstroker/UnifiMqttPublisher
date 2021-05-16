@@ -71,7 +71,7 @@ sensor:
   - platform: mqtt
     name: "Unifi AP 1 - RAM"
     state_topic: "unifi/stats/ap0"
-    value_template: "{{ value_json['system-stats']['ram'] }}"
+    value_template: "{{ value_json['system-stats']['mem'] }}"
     icon: mdi:memory
   - platform: mqtt
     name: "Unifi AP 1 - uptime"
