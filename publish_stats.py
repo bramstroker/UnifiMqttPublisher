@@ -46,12 +46,12 @@ class UnifiMqttPublisher:
                 'uptime',
                 'tx_bytes',
                 'rx_bytes',
-                'state',
                 'satisfaction',
                 'system-stats',
                 'radio_table_stats'
             ])
             payload = {k: dev[k] for k in dev.keys() & fieldsToInclude}
+            payload['device_state'] = dev['state']
             #print(payload)
             self.mqttClient.publish('unifi/stats/ap' + str(i), payload=json.dumps(payload))
             self.mqttClient.publish('unifi/availability/ap' + str(i), payload=dev['state'])

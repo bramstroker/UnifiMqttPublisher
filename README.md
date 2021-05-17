@@ -57,7 +57,7 @@ sensor:
     availability_topic: "unifi/availability/ap0"
     payload_available: "1"
     payload_not_available: "0"
-    value_template: "{{ value_json.state }}"
+    value_template: "{{ value_json.device_state }}"
     json_attributes_topic: "unifi/stats/ap0"
   - platform: mqtt
     name: "Unifi AP 1 - score"
