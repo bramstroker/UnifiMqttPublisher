@@ -18,7 +18,7 @@ MQTT_HOST = os.getenv('MQTT_HOST', 'hass.home')
 MQTT_USER = os.getenv('MQTT_USER')
 MQTT_PASS = os.getenv('MQTT_PASS')
 
-POLL_FREQUENCY = os.getenv('POLL_FREQUENCY', 30)
+POLL_FREQUENCY = int(os.getenv('POLL_FREQUENCY', 30))
 
 class UnifiMqttPublisher:
     def __init__(self):
