@@ -46,6 +46,8 @@ class UnifiMqttPublisher:
                 'uptime',
                 'tx_bytes',
                 'rx_bytes',
+                'rx_bytes-r',
+                'tx_bytes-r'
                 'satisfaction',
                 'system-stats',
                 'radio_table_stats'
