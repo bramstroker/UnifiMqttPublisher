@@ -20,6 +20,7 @@ MQTT_PASS = os.getenv('MQTT_PASS')
 
 POLL_FREQUENCY = int(os.getenv('POLL_FREQUENCY', 30))
 
+
 class UnifiMqttPublisher:
     def __init__(self):
         self.mqttClient = mqtt.Client()
@@ -29,58 +30,44 @@ class UnifiMqttPublisher:
         self.unifiClient = UnifiClient(host=UNIFI_HOST,username=UNIFI_USER,password=UNIFI_PASS,site=UNIFI_SITE,port=UNIFI_PORT)
 
     def run(self):
-        while (True):
+        while True:
             print('Publishing..')
-            self.publishControllerStats()
-            self.publishDeviceStats()
+            self.publish_controller_stats()
+            self.publish_device_stats()
             time.sleep(POLL_FREQUENCY)
 
-    def publishDeviceStats(self):
+    def publish_device_stats(self) -> None:
         devs = self.unifiClient.list_devices()
+        access_points = [dev for dev in devs if dev['type'] == 'uap']
         i = 0
-        for dev in devs:
-            fieldsToInclude = set([
-                'ip',
-                'type',
-                'model',
-                'uptime',
-                'tx_bytes',
-                'rx_bytes',
-                'wan1',
-                'satisfaction',
-                'system-stats',
-                'radio_table_stats'
-            ])
-            payload = {k: dev[k] for k in dev.keys() & fieldsToInclude}
-            payload['device_state'] = dev['state']
-            #print(payload)
+        for ap in access_points:
+            fields_to_include = {'ip', 'type', 'model', 'uptime', 'tx_bytes', 'rx_bytes', 'wan1', 'satisfaction',
+                                 'system-stats', 'radio_table_stats'}
+            payload = {k: ap[k] for k in ap.keys() & fields_to_include}
+            payload['device_state'] = ap['state']
             self.mqttClient.publish('unifi/stats/ap' + str(i), payload=json.dumps(payload))
-            self.mqttClient.publish('unifi/availability/ap' + str(i), payload=dev['state'])
+            self.mqttClient.publish('unifi/availability/ap' + str(i), payload=ap['state'])
             i = i + 1
 
-    def publishControllerStats(self):
+    def publish_controller_stats(self) -> None:
         clients = self.unifiClient.list_clients()
         sysinfo = self.unifiClient.stat_sysinfo()
         health = self.unifiClient.list_health()
 
-        controllerStats = sysinfo[0]
-        fieldsToInclude = set([
-            'version',
-            'update_available',
-            'name'
-        ])
-        payload = {k: controllerStats[k] for k in controllerStats.keys() & fieldsToInclude}
+        controller_stats = sysinfo[0]
+        fields_to_include = {'version', 'update_available', 'name'}
+        payload = {k: controller_stats[k] for k in controller_stats.keys() & fields_to_include}
         payload['num_clients'] = len(clients)
 
-        wlanHealth = next((x for x in health if x['subsystem'] == 'wlan'), None)
-        if (wlanHealth):
-            payload['wlan_clients'] = wlanHealth['num_user']
-            payload['wlan_guests'] = wlanHealth['num_guest']
-            payload['wlan_status'] = wlanHealth['status']
-            payload['num_ap'] = wlanHealth['num_ap']
+        wlan_health = next((x for x in health if x['subsystem'] == 'wlan'), None)
+        if wlan_health:
+            payload['wlan_clients'] = wlan_health['num_user']
+            payload['wlan_guests'] = wlan_health['num_guest']
+            payload['wlan_status'] = wlan_health['status']
+            payload['num_ap'] = wlan_health['num_ap']
 
-        #print(payload)
         self.mqttClient.publish('unifi/stats/controller', payload=json.dumps(payload))
+
 
 mqttPublisher = UnifiMqttPublisher()
 mqttPublisher.run()
